@@ -8,7 +8,8 @@ def parce_questions(path: str) -> dict:
 
     for part in questions_descriptions:
         if "Вопрос" in part:
-            questions.append(part.split(":")[1].replace("\n", ""))
+            questions.append(part.split(":\n")[1].replace("\n", " "))
         if "Ответ" in part:
-            answers.append(part.split(":")[1].strip().replace("\n", ""))
+            answers.append(part.split(":\n")[1].strip().replace("\n", " "))
     return dict(zip(questions, answers))
+
