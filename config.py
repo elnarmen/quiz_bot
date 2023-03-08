@@ -16,4 +16,7 @@ REDIS_PORT = env("REDIS_PORT")
 
 REDIS_PASSWORD = env("REDIS_PASSWORD")
 
-QUESTIONS_PATH = os.path.join("quiz_questions", env("FILE_NAME", default="1vs1200.txt"))
+QUESTIONS_PATH = os.path.join(
+    "quiz_questions",
+    env("FILE_NAME", default="1vs1200.txt")
+)

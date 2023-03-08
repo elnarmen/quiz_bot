@@ -5,7 +5,12 @@ from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 
 from config import VK_TOKEN, QUESTIONS_PATH
-from service_functions import parce_questions, leave_only_letters, check_user_answer, connect_db
+from service_functions import (
+    parce_questions,
+    leave_only_letters,
+    check_user_answer,
+    connect_db
+)
 
 
 def send_message(event, vk_api, messaage):
@@ -54,4 +59,9 @@ if __name__ == "__main__":
 
     for event in longpoll.listen():
         if event.type == VkEventType.MESSAGE_NEW and event.to_me:
-            quiz_handler(event, vk_api, redis_connection, questions_with_answers)
+            quiz_handler(
+                event,
+                vk_api,
+                redis_connection,
+                questions_with_answers
+            )
