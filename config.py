@@ -1,19 +1,19 @@
 import os
 
-from dotenv import load_dotenv
+from environs import Env
+
+env = Env()
+env.read_env()
 
 
-load_dotenv()
+TG_TOKEN = env("TG_TOKEN")
 
+VK_TOKEN = env("VK_TOKEN")
 
-TG_TOKEN = os.getenv("TG_TOKEN")
+REDIS_HOST = env("REDIS_HOST")
 
-VK_TOKEN = os.getenv("VK_TOKEN")
+REDIS_PORT = env("REDIS_PORT")
 
-REDIS_HOST = os.getenv("REDIS_HOST")
+REDIS_PASSWORD = env("REDIS_PASSWORD")
 
-REDIS_PORT = os.getenv("REDIS_PORT")
-
-REDIS_PASSWORD = os.getenv("REDIS_PASSWORD")
-
-QUESTIONS_PATH = os.path.join("quiz_questions", os.getenv("FILE_NAME"))
+QUESTIONS_PATH = os.path.join("quiz_questions", env("FILE_NAME", default="1vs1200.txt"))
