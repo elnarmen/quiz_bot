@@ -3,12 +3,14 @@ import os
 from random import choice
 from pathlib import Path
 
+import telegram
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CallbackContext, CommandHandler
 from telegram.ext import MessageHandler, Filters, ConversationHandler
 
-from config import TG_TOKEN, QUESTIONS_PATH
+from config import TG_TOKEN, QUESTIONS_PATH, LOGGER_TG_TOKEN, LOGS_CHAT_ID
 from service_functions import parce_questions, check_user_answer, connect_db
+from logs_handler import TelegramLogsHandler
 
 
 logger = logging.getLogger(__name__)
@@ -85,11 +87,14 @@ def stop(update: Update, context: CallbackContext):
     return ConversationHandler.END
 
 
+def error_handler(update: Update, context: CallbackContext):
+    logger.exception(context.error)
+
+
 def main():
-    logging.basicConfig(
-        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-        level=logging.INFO
-    )
+    logs_bot = telegram.Bot(token=LOGGER_TG_TOKEN)
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(TelegramLogsHandler(logs_bot, LOGS_CHAT_ID))
 
     updater = Updater(TG_TOKEN)
     dispatcher = updater.dispatcher
@@ -121,6 +126,7 @@ def main():
     dispatcher.bot_data["redis_connection"] = redis_connection
     dispatcher.bot_data["questions_with_answers"] = questions_with_answers
     dispatcher.add_handler(conv_handler)
+    dispatcher.add_error_handler(error_handler)
 
     updater.start_polling()
     updater.idle()
