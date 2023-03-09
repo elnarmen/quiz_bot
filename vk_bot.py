@@ -33,7 +33,6 @@ def quiz_handler(event, vk_api, redis_connection, questions_with_answers):
         question = random.choice(list(questions_with_answers.keys()))
         redis_connection.set(event.user_id, question)
         send_message(event, vk_api, messaage=question)
-        1/0
     elif event.text == "Сдаться":
         question = redis_connection.get(event.user_id)
         correct_answer = questions_with_answers.get(question)
