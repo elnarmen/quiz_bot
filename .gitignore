@@ -160,8 +160,4 @@ cython_debug/
 .idea/
 quiz_questions/*
 !quiz_questions/
-!quiz_questions/test.txt
-!quiz_questions/1vs1200.txt
-!quiz_questions/1vs1201.txt
-!quiz_questions/1vs1298.txt
-!quiz_questions/3f15.txt
+!quiz_questions/questions.txt

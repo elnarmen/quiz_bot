@@ -7,7 +7,7 @@ from config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
 
 
 def parce_questions(path: str) -> dict:
-    with open(path, "r", encoding="KOI8-R") as file:
+    with open(path, "r", encoding="UTF-8") as file:
         content = file.read()
     questions_descriptions = content.split("\n\n")
 
