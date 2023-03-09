@@ -29,4 +29,3 @@ QUESTIONS_PATH = Path(
     "quiz_questions",
     env("FILE_NAME", default="questions.txt")
 )
-print(QUESTIONS_PATH)
