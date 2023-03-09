@@ -1,6 +1,8 @@
 import os
 
 from environs import Env
+from pathlib import Path
+
 
 env = Env()
 env.read_env()
@@ -20,7 +22,11 @@ REDIS_PORT = env("REDIS_PORT")
 
 REDIS_PASSWORD = env("REDIS_PASSWORD")
 
-QUESTIONS_PATH = os.path.join(
+BASE_DIR = Path(__file__).resolve().parent
+
+QUESTIONS_PATH = Path(
+    BASE_DIR,
     "quiz_questions",
     env("FILE_NAME", default="questions.txt")
 )
+print(QUESTIONS_PATH)
