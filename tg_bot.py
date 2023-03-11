@@ -3,19 +3,23 @@ import os
 from random import choice
 from pathlib import Path
 
+import redis
 import telegram
 from telegram import Update, ReplyKeyboardMarkup, ReplyKeyboardRemove
 from telegram.ext import Updater, CallbackContext, CommandHandler
 from telegram.ext import MessageHandler, Filters, ConversationHandler
+from environs import Env
+from pathlib import Path
 
-from config import TG_TOKEN, QUESTIONS_PATH, LOGGER_TG_TOKEN, LOGS_CHAT_ID
-from service_functions import parce_questions, check_user_answer, connect_db
+from questions_answers_utils import parce_questions, check_user_answer
 from logs_handler import TelegramLogsHandler
 
 
 logger = logging.getLogger(__name__)
 
 USER_CHOICE = range(1)
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def get_keyboard():
@@ -92,41 +96,60 @@ def error_handler(update: Update, context: CallbackContext):
 
 
 def main():
-    logs_bot = telegram.Bot(token=LOGGER_TG_TOKEN)
-    logger.setLevel(logging.ERROR)
-    logger.addHandler(TelegramLogsHandler(logs_bot, LOGS_CHAT_ID))
+    env = Env()
+    env.read_env()
 
-    updater = Updater(TG_TOKEN)
-    dispatcher = updater.dispatcher
-    conv_handler = ConversationHandler(
-        entry_points=[CommandHandler("start", start)],
-        states={
-            USER_CHOICE: [
-                MessageHandler(
-                    Filters.regex("^Новый вопрос"),
-                    handle_new_question_request
-                ),
-                MessageHandler(Filters.regex("^Сдаться"), send_correct_answer),
-                MessageHandler(
-                    Filters.text & ~Filters.command,
-                    handle_solution_attempt
-                )
-
-            ],
-        },
-        fallbacks=[
-            CommandHandler("start", start),
-            CommandHandler("stop", stop)
-        ]
+    QUESTIONS_PATH = Path(
+        BASE_DIR,
+        "quiz_questions",
+        env("FILE_NAME", default="questions.txt")
     )
 
-    redis_connection = connect_db()
+    logs_bot = telegram.Bot(token=env("LOGGER_TG_TOKEN"))
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(TelegramLogsHandler(logs_bot, env("LOGS_CHAT_ID")))
+
+    updater = Updater(env("TG_TOKEN"))
+    dispatcher = updater.dispatcher
+
+    redis_host = env("REDIS_HOST")
+    redis_port = env("REDIS_PORT")
+    redis_password = env("REDIS_PASSWORD")
+    redis_connection = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        db=0,
+        password=redis_password,
+        decode_responses=True
+    )
+
     questions_with_answers = parce_questions(QUESTIONS_PATH)
 
     dispatcher.bot_data["redis_connection"] = redis_connection
     dispatcher.bot_data["questions_with_answers"] = questions_with_answers
-    dispatcher.add_handler(conv_handler)
+
     dispatcher.add_error_handler(error_handler)
+
+    dispatcher.add_handler(CommandHandler("start", start))
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.regex("^Новый вопрос"),
+            handle_new_question_request
+        ),
+    )
+
+    dispatcher.add_handler(
+        MessageHandler(Filters.regex("^Сдаться"), send_correct_answer),
+    )
+
+    dispatcher.add_handler(
+        MessageHandler(
+            Filters.text & ~Filters.command,
+            handle_solution_attempt
+        )
+    )
+
+    dispatcher.add_handler(CommandHandler("stop", stop))
 
     updater.start_polling()
     updater.idle()

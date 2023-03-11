@@ -1,22 +1,24 @@
 import random
 import logging
 
+import redis
 import telegram
 import vk_api as vk
 from vk_api.longpoll import VkLongPoll, VkEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
+from environs import Env
+from pathlib import Path
 
-from config import VK_TOKEN, QUESTIONS_PATH, LOGGER_TG_TOKEN, LOGS_CHAT_ID
-from service_functions import (
+from questions_answers_utils import (
     parce_questions,
-    leave_only_letters,
     check_user_answer,
-    connect_db
 )
 from logs_handler import TelegramLogsHandler
 
 
 logger = logging.getLogger(__name__)
+
+BASE_DIR = Path(__file__).resolve().parent
 
 
 def send_message(event, vk_api, messaage):
@@ -52,11 +54,20 @@ def quiz_handler(event, vk_api, redis_connection, questions_with_answers):
 
 
 if __name__ == "__main__":
-    logs_telegram_bot = telegram.Bot(token=LOGGER_TG_TOKEN)
-    logger.setLevel(logging.ERROR)
-    logger.addHandler(TelegramLogsHandler(logs_telegram_bot, LOGS_CHAT_ID))
+    env = Env()
+    env.read_env()
 
-    vk_session = vk.VkApi(token=VK_TOKEN)
+    QUESTIONS_PATH = Path(
+        BASE_DIR,
+        "quiz_questions",
+        env("FILE_NAME", default="questions.txt")
+    )
+
+    logs_telegram_bot = telegram.Bot(token=env("LOGGER_TG_TOKEN"))
+    logger.setLevel(logging.ERROR)
+    logger.addHandler(TelegramLogsHandler(logs_telegram_bot, env("LOGS_CHAT_ID")))
+
+    vk_session = vk.VkApi(token=env("VK_TOKEN"))
     vk_api = vk_session.get_api()
     longpoll = VkLongPoll(vk_session)
 
@@ -64,7 +75,17 @@ if __name__ == "__main__":
     keyboard.add_button("Новый вопрос", color=VkKeyboardColor.POSITIVE)
     keyboard.add_button("Сдаться", color=VkKeyboardColor.NEGATIVE)
 
-    redis_connection = connect_db()
+    redis_host = env("REDIS_HOST")
+    redis_port = env("REDIS_PORT")
+    redis_password = env("REDIS_PASSWORD")
+    redis_connection = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        db=0,
+        password=redis_password,
+        decode_responses=True
+    )
+
     questions_with_answers = parce_questions(QUESTIONS_PATH)
 
     for event in longpoll.listen():

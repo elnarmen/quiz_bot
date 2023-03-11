@@ -1,10 +1,6 @@
 import re
 from string import punctuation
 
-import redis
-
-from config import REDIS_HOST, REDIS_PORT, REDIS_PASSWORD
-
 
 def parce_questions(path: str) -> dict:
     with open(path, "r", encoding="KOI8-R") as file:
@@ -31,20 +27,5 @@ def leave_only_letters(text):
 
 def check_user_answer(user_answer, correct_answer):
     matches = re.search(r"^[^.()]+", correct_answer)
-    if leave_only_letters(user_answer.lower()) ==\
-            leave_only_letters(matches.group().lower()):
-        return True
-
-
-def connect_db():
-    redis_host = REDIS_HOST
-    redis_port = REDIS_PORT
-    redis_password = REDIS_PASSWORD
-
-    return redis.Redis(
-        host=redis_host,
-        port=redis_port,
-        db=0,
-        password=redis_password,
-        decode_responses=True
-    )
+    return leave_only_letters(user_answer.lower()) ==\
+            leave_only_letters(matches.group().lower())
