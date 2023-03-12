@@ -17,8 +17,6 @@ from logs_handler import TelegramLogsHandler
 
 logger = logging.getLogger(__name__)
 
-USER_CHOICE = range(1)
-
 BASE_DIR = Path(__file__).resolve().parent
 
 
@@ -41,8 +39,6 @@ def start(update: Update, context: CallbackContext):
         reply_markup=get_keyboard()
     )
 
-    return USER_CHOICE
-
 
 def handle_new_question_request(update: Update, context: CallbackContext):
     db_connection = context.bot_data["redis_connection"]
@@ -50,7 +46,6 @@ def handle_new_question_request(update: Update, context: CallbackContext):
 
     db_connection.set(update.message.chat_id, question)
     update.message.reply_text(question)
-    return USER_CHOICE
 
 
 def handle_solution_attempt(update: Update, context: CallbackContext):
@@ -70,8 +65,6 @@ def handle_solution_attempt(update: Update, context: CallbackContext):
             "Неправильно… Попробуешь ещё раз?",
             reply_markup=get_keyboard()
         )
-
-    return USER_CHOICE
 
 
 def send_correct_answer(update: Update, context: CallbackContext):
